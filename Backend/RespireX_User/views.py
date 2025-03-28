@@ -14,7 +14,8 @@ from datetime import datetime
 import hashlib
 import pandas as pd
 import csv
-
+import requests
+from requests_toolbelt.multipart import MultipartEncoder
 # Create your views here.
 @csrf_exempt
 def API_CALL(request, model_name):
@@ -37,7 +38,8 @@ def API_CALL(request, model_name):
             return JsonResponse({'error': 'Missing auth_token'}, status=400)
     
     user = APIUser.objects.filter(auth_token=auth_token).first()
-    
+    if not user.is_active:
+        return JsonResponse({'status': False, 'message': 'Account is not active', 'method': 'POST', 'model': 'level0', 'account_type': user.account_type, 'total_hits': user.total_hits, 'hit_limit': 20, 'status_code': 400}, status=400)
     if user:
         if user.account_type == '0':
             if user.total_hits >= 20:
@@ -52,6 +54,7 @@ def API_CALL(request, model_name):
                 symptoms = data['symptoms']
                 symptoms = [i+1 for i in symptoms]
                 symptoms[0] -= 1
+                print("-------------------------------------",symptoms)
                 result = model.predict(symptoms)
                 if result:
                     current_date_time = datetime.now()
@@ -146,15 +149,135 @@ def API_CALL(request, model_name):
     else:
         return JsonResponse({'error': 'Invalid auth_token'}, status=401)
 
+@csrf_exempt
 def user_login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         username = data['username']
         password = data['password']
-        user = User.objects.filter(username=username, password=password).first()
+        user = User.objects.filter(username=username).first()
+        api_data = APIUser.objects.filter(user=user).first()
+        username = user.username
+        auth_token = api_data.auth_token
+        account_type = api_data.account_type
+
         if user:
-            return JsonResponse({'status': True, 'message': 'Login successful', 'method': 'POST', 'model': 'level0', 'account_type': '0', 'total_hits': 0, 'hit_limit': 20, 'status_code': 200})
+            return JsonResponse({'status': True, 'message': 'Login successful', 'method': 'POST', 'model': 'level0', 'account_type': account_type, 'total_hits': 0, 'hit_limit': 20, 'status_code': 200, 'auth_token': auth_token})
         else:
             return JsonResponse({'status': False, 'message': 'Invalid username or password', 'method': 'POST', 'model': 'level0', 'account_type': '0', 'total_hits': 0, 'hit_limit': 20, 'status_code': 400}, status=400)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def level0Analysis(request):
+    print(request.method,request.body)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        symptoms = data['symptoms']
+        symptoms_data = []
+        symptoms_data.append(1 if data['gender'] == 'Male' else 0)
+        symptoms_data.append(data['age'])
+        all_symptoms = ["SMOKING",
+            "YELLOW FINGERS", 
+            "ANXIETY",
+            "PEER PRESSURE",
+            "CHRONIC DISEASE",
+            "FATIGUE",
+            "ALLERGY", 
+            "WHEEZING",
+            "ALCOHOL CONSUMING",
+            "COUGHING",
+            "SHORTNESS OF BREATH",
+            "SWALLOWING DIFFICULTY",
+            "CHEST PAIN",
+            ]
+        for i in all_symptoms:
+            if i in symptoms:
+                symptoms_data.append(1)
+            else:
+                symptoms_data.append(0)
+        
+        print(symptoms_data)
+        auth_token = data['auth_token']
+        user = APIUser.objects.filter(auth_token=auth_token).first()
+        if user:
+            model = SymptoScan()
+            symptoms = symptoms_data
+            true_false_data = {}
+            true_false_data['gender'] = data['gender']
+            true_false_data['age'] = symptoms[1]
+            true_false_data['symptoms'] = {}
+            for i,j in zip(symptoms[2:],all_symptoms):
+                if i == 1:
+                    true_false_data['symptoms'][j] = True
+                else:
+                    true_false_data['symptoms'][j] = False
+            symptoms = [i+1 for i in symptoms]
+            symptoms[1] -= 1
+
+            result = model.predict(symptoms)
+            try:
+                current_date_time = datetime.now()
+                historyadd = {f"{current_date_time}": {'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200}}
+                user.history.update(historyadd)
+                user.total_hits += 1
+                user.save()
+                return JsonResponse({'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200, 'true_false_data': true_false_data})
+            except Exception as e:
+                return JsonResponse({'status': False, 'message': 'Prediction failed', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 400})
+    
+        return JsonResponse({'status': True, 'message': 'Analysis successful'})
+    return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def level1Analysis(request):
+    print(request.method, request.FILES, request.POST)
+    if request.method == 'POST':
+        try:
+            # Extract the image file from the request
+            image_file = request.FILES.get('image')
+            if not image_file:
+                return JsonResponse({'status': False, 'message': 'No image file found'}, status=400)
+            
+            auth_token = request.POST.get('auth_token', '')
+            clinical_notes = request.POST.get('clinical_notes', '')
+            patient_data = request.POST.get('patient_data', '{}')
+            
+            # Create a new request to the API endpoint
+            api_url = 'http://127.0.0.1:8000/api/0/level1/'
+            
+            # Create a new MultipartEncoder for sending files
+            multipart_data = MultipartEncoder(
+                fields={
+                    'file': (image_file.name, image_file.read(), image_file.content_type),
+                    'auth_token': auth_token,
+                    'clinical_notes': clinical_notes,
+                    'patient_data': patient_data
+                }
+            )
+            
+            # Make the API request
+            response = requests.post(
+                api_url, 
+                data=multipart_data,
+                headers={'Content-Type': multipart_data.content_type}
+            )
+            print("----------------------------------------------------------------------------")
+            # Check if the request was successful
+            if response.status_code == 200:
+                return JsonResponse(response.json())
+            else:
+                # Return error if API request failed
+                return JsonResponse({
+                    'status': False, 
+                    'message': f'API Error: {response.status_code}',
+                    'details': response.text
+                }, status=500)
+            
+        except Exception as e:
+            import traceback
+            print(f"Error processing request: {str(e)}")
+            print(traceback.format_exc())  # Print the full stack trace
+            return JsonResponse({'status': False, 'message': f'Error: {str(e)}'}, status=500)
+    
+    return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
