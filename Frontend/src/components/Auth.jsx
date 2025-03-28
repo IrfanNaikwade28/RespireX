@@ -177,7 +177,6 @@ export const Auth = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle form submission based on isLogin state
     };
 
     return (
@@ -202,7 +201,7 @@ export const Auth = () => {
                 ) : (
                     <SignupForm 
                         formData={formData}
-                        setFormData={setFormData}
+                        setFormData={setFormData}a
                         handleSubmit={handleSubmit}
                         setIsLogin={setIsLogin}
                     />

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import lungs from "../assets/images/lungs-image-next.png"
 
 const attributes = [
   "SMOKING",
@@ -33,8 +34,8 @@ export const PatientAnalysis = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* === LEFT SECTION - TITLE AND ILLUSTRATION === */}
           <div className="lg:w-1/3">
-            <div className="sticky top-10 space-y-8">
-              <div className="space-y-4">
+            <div className="sticky top-10 space-y-20">
+              <div className="space-y-3">
                 <h1 className="text-4xl lg:text-6xl font-bold">
                   <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
                     Overview
@@ -49,12 +50,11 @@ export const PatientAnalysis = () => {
               </div>
 
               {/* Medical Illustration */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-blue-500/10 rounded-3xl blur-2xl group-hover:bg-blue-500/20 transition-all duration-300"></div>
+              <div className="w-full h-full flex justify-center items-center">
                 <img
-                  src="/medical-consultation.svg"
+                  src={lungs}
                   alt="Medical consultation"
-                  className="relative w-full h-auto max-w-md mx-auto drop-shadow-xl"
+                  className="w-1/2 h-auto"
                 />
               </div>
             </div>
