@@ -23,9 +23,55 @@ export const PatientAnalysis = () => {
   );
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
 
   const toggleAttribute = (attr) => {
     setToggles((prev) => ({ ...prev, [attr]: !prev[attr] }));
+  };
+
+  const handleSubmit = async () => {
+    // Validate form
+    if (!age || !gender) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/user/level0/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auth_token: localStorage.getItem('auth_token'),
+          age: parseInt(age),
+          gender,
+          symptoms: Object.entries(toggles)
+            .filter(([_, value]) => value)
+            .map(([key]) => key)
+        })
+      });
+
+      const data = await response.json();
+      localStorage.setItem('true_false_data', JSON.stringify(data.true_false_data));
+      if (response.ok) {
+        // setResult(data);
+        console.log("Fetched data",data)
+        window.location.href = '/xray';
+      } else {
+        setError(data.message || 'Analysis failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Analysis error:', err);
+      setError('Failed to process your request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,6 +128,7 @@ export const PatientAnalysis = () => {
                       onChange={(e) => setAge(e.target.value)}
                       className="w-full p-4 pl-12 border border-slate-200 rounded-xl bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400"
                       placeholder="Enter age"
+                      required
                     />
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,6 +146,7 @@ export const PatientAnalysis = () => {
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
                       className="w-full p-4 pl-12 border border-slate-200 rounded-xl bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                      required
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -113,6 +161,12 @@ export const PatientAnalysis = () => {
                   </div>
                 </div>
               </div>
+
+              {error && (
+                <div className="mt-4 text-red-500 text-sm text-center">
+                  {error}
+                </div>
+              )}
             </div>
 
             {/* Symptoms Selection */}
@@ -149,13 +203,41 @@ export const PatientAnalysis = () => {
 
             {/* Analyze Button */}
             <div className="flex justify-end">
-              <button className="group px-12 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-                Analyze Results
-                <svg className="inline-block w-5 h-5 ml-2 -mr-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+              <button 
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`group px-12 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] ${
+                  loading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <>
+                    Analyze Results
+                    <svg className="inline-block w-5 h-5 ml-2 -mr-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
+
+            {/* Results Section */}
+            {result && (
+              <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-xl border border-white/50">
+                <h2 className="text-2xl font-semibold mb-4 text-slate-800">Analysis Results</h2>
+                <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 // Move form components outside of Auth component
-const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
+const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error }) => (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
             <div>
@@ -10,7 +10,7 @@ const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
                 </label>
                 <input
                     id="email"
-                    type="email"
+                    type="text"
                     required
                     className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
                     placeholder="Enter your email"
@@ -33,6 +33,12 @@ const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
                 />
             </div>
         </div>
+
+        {error && (
+            <div className="text-red-500 text-sm text-center">
+                {error}
+            </div>
+        )}
 
         <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -174,9 +180,55 @@ export const Auth = () => {
         password: '',
         confirmPassword: '',
     });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
+=======
+        setError('');
+        setLoading(true);
+
+        try {
+            if (isLogin) {
+                // Login request using fetch
+                const response = await fetch('http://127.0.0.1:8000/user/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: formData.email,  // Using email as username
+                        password: formData.password
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data)
+                if (response.ok && data.status) {
+                    console.log('Login successful:', data);
+                    localStorage.setItem('auth_token', data.auth_token);
+                    localStorage.setItem('user_data', JSON.stringify(data));
+                    window.location.href = '/';
+                } else {
+                    setError(data.message || 'Login failed');
+                }
+            } else {
+                // Handle signup logic here
+                if (formData.password !== formData.confirmPassword) {
+                    setError('Passwords do not match');
+                    return;
+                }
+                // Add signup API call here using fetch
+            }
+        } catch (error) {
+            console.error('Auth error:', error);
+            setError('Authentication failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+>>>>>>> 0fbe551681753080c30f3984839ab6daf40705bc
     };
 
     return (
@@ -197,6 +249,7 @@ export const Auth = () => {
                         setFormData={setFormData}
                         handleSubmit={handleSubmit}
                         setIsLogin={setIsLogin}
+                        error={error}
                     />
                 ) : (
                     <SignupForm 

@@ -10,6 +10,7 @@ import { Auth } from './components/Auth';
 function App() {
   return (
     <Router>
+      <Navbar/>
       <Routes>
         <Route path="/patient" element={<PatientAnalysis />} />
         <Route path="/auth" element={<Auth />} />
