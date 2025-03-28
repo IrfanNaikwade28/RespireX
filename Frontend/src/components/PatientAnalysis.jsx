@@ -3,12 +3,12 @@ import lungs from "../assets/images/lungs-image-next.png"
 
 const attributes = [
   "SMOKING",
-  "YELLOW FINGERS", 
+  "YELLOW FINGERS",
   "ANXIETY",
   "PEER PRESSURE",
   "CHRONIC DISEASE",
   "FATIGUE",
-  "ALLERGY", 
+  "ALLERGY",
   "WHEEZING",
   "ALCOHOL CONSUMING",
   "COUGHING",
@@ -26,6 +26,7 @@ export const PatientAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [clinicalNotes, setClinicalNotes] = useState("");
 
   const toggleAttribute = (attr) => {
     setToggles((prev) => ({ ...prev, [attr]: !prev[attr] }));
@@ -40,7 +41,7 @@ export const PatientAnalysis = () => {
 
     setLoading(true);
     setError("");
-    
+
     try {
       const response = await fetch('http://127.0.0.1:8000/user/level0/', {
         method: 'POST',
@@ -53,15 +54,17 @@ export const PatientAnalysis = () => {
           gender,
           symptoms: Object.entries(toggles)
             .filter(([_, value]) => value)
-            .map(([key]) => key)
+            .map(([key]) => key),
+          clinical_notes: clinicalNotes
         })
       });
 
       const data = await response.json();
-      localStorage.setItem('true_false_data', JSON.stringify(data.true_false_data));
+      localStorage.setItem('true_false_data', JSON.stringify(data.true_false_data))
+      localStorage.setItem('clinical_notes', JSON.stringify(data.clinical_notes));
       if (response.ok) {
         // setResult(data);
-        console.log("Fetched data",data)
+        console.log("Fetched data", data)
         window.location.href = '/xray';
       } else {
         setError(data.message || 'Analysis failed. Please try again.');
@@ -116,7 +119,7 @@ export const PatientAnalysis = () => {
                 </svg>
                 Patient Information
               </h2>
-              
+
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Age Input */}
                 <div className="space-y-2">
@@ -185,30 +188,41 @@ export const PatientAnalysis = () => {
                   >
                     <span className="font-medium text-slate-700">{attr}</span>
                     <div
-                      className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                        toggles[attr] ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-slate-200"
-                      }`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${toggles[attr] ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-slate-200"
+                        }`}
                       onClick={() => toggleAttribute(attr)}
                     >
                       <div
-                        className={`size-4 bg-white rounded-full shadow-lg transition-transform duration-300 transform ${
-                          toggles[attr] ? "translate-x-6" : "translate-x-0"
-                        }`}
+                        className={`size-4 bg-white rounded-full shadow-lg transition-transform duration-300 transform ${toggles[attr] ? "translate-x-6" : "translate-x-0"
+                          }`}
                       />
                     </div>
                   </div>
                 ))}
               </div>
+              <div className="mt-6 border-t border-slate-200 pt-4">
+                <label htmlFor="clinicalReport" className="flex items-center gap-2 text-xl font-medium text-slate-700 mb-2"><svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg> Add Clinical Report Information</label>
+                <textarea
+                  id="clinicalReport"
+                  rows="4"
+                  className="block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
+                  placeholder="Enter the clinical report here..."
+                  value={clinicalNotes}
+                  onChange={(e) => setClinicalNotes(e.target.value)}
+                />
+              </div>
             </div>
+
 
             {/* Analyze Button */}
             <div className="flex justify-end">
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`group px-12 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] ${
-                  loading ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className={`group px-12 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] ${loading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
                 {loading ? (
                   <span className="flex items-center">

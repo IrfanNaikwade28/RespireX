@@ -128,9 +128,8 @@ const ConditionsModal = ({ isOpen, onClose, conditions }) => {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? "bg-indigo-600 w-4" : "bg-slate-300"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? "bg-indigo-600 w-4" : "bg-slate-300"
+                }`}
             />
           ))}
         </div>
@@ -175,18 +174,22 @@ export const ApiHistory = () => {
   const fetchData = async () => {
     // This would be your API call
     // Mock JSON data structure
+    const authToken = localStorage.getItem('auth_token');
+    const response = await fetch(`http://127.0.0.1:8000/user/gethistory/?auth_token=${authToken}`);
+    const data = await response.json();
+    console.log(data.graph_data)
     const mockResponse = {
       "status": {
         "usage": {
-          "used": 75,      // number of used requests
-          "limit": 100     // total request limit
+          "used": data.graph_data.usage.used,
+          "limit": data.graph_data.usage.limit
         },
         "user": {
-          "isPremium": true,
-          "isActive": true
+          "isPremium": data.graph_data.user.isPremium,
+          "isActive": data.graph_data.user.isActive
         }
       }
-    };
+    }; // Use the fetched data as status.status
 
     // Transform the data for the pie chart
     const transformedData = [
@@ -240,6 +243,7 @@ export const ApiHistory = () => {
                 {new Date().toLocaleString()}
               </p>
             </div>
+
             <div className="text-right">
               <div className="text-2xl font-bold text-indigo-600">
                 {(
@@ -252,17 +256,34 @@ export const ApiHistory = () => {
               <div className="text-sm text-slate-600">Success Rate</div>
             </div>
           </div>
+
         </div>
 
         {/* Charts Grid */}
-        <div className="flex justify-center items-center mb-8 w-full">
-          {/* Status Distribution */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-8 w-full gap-4">
+          {/* Auth Token Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300 flex-1 mt-4 md:mt-0">
+            <h2 className="text-lg font-semibold text-slate-800">Auth Token</h2>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-slate-600 truncate">{localStorage.getItem('auth_token')}</span>
+              <button
+                className="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition duration-200"
+                onClick={() => {
+                  navigator.clipboard.writeText(localStorage.getItem('auth_token'));
+                  alert('Auth token copied to clipboard!');
+                }}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          {/* API Usage Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300 flex-1 mt-4 md:mt-0">
+
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold text-slate-800">
-                  API Usage
-                </h2>
+                <h2 className="text-xl font-semibold text-slate-800">API Usage</h2>
                 <div className="flex gap-2">
                   {userStatus.isPremium && (
                     <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center gap-1">
@@ -272,14 +293,11 @@ export const ApiHistory = () => {
                       Premium
                     </span>
                   )}
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
-                    userStatus.isActive 
-                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${userStatus.isActive
+                      ? 'bg-green-50 text-green-700 border border-green-200'
                       : 'bg-red-50 text-red-700 border border-red-200'
-                  }`}>
-                    <span className={`w-2 h-2 rounded-full ${
-                      userStatus.isActive ? 'bg-green-500' : 'bg-red-500'
-                    }`}></span>
+                    }`}>
+                    <span className={`w-2 h-2 rounded-full ${userStatus.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
                     {userStatus.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
@@ -330,13 +348,11 @@ export const ApiHistory = () => {
 
             {/* Usage Warning if close to limit */}
             {userStatus.used / userStatus.limit > 0.8 && (
-              <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <span>You're approaching your API usage limit</span>
-                </div>
+              <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>You're approaching your API usage limit</span>
               </div>
             )}
           </div>
@@ -383,22 +399,20 @@ export const ApiHistory = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded-full text-sm font-medium ${
-                          request.status_code < 400
+                        className={`px-2 py-1 rounded-full text-sm font-medium ${request.status_code < 400
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {request.status_code}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded-full text-sm font-medium ${
-                          request.model === "level0"
+                        className={`px-2 py-1 rounded-full text-sm font-medium ${request.model === "level0"
                             ? "bg-purple-100 text-purple-800"
                             : "bg-indigo-100 text-indigo-800"
-                        }`}
+                          }`}
                       >
                         {request.model}
                       </span>
