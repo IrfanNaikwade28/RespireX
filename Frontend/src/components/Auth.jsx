@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Move form components outside of Auth component
-const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error }) => (
+const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error, loading }) => (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
             <div>
@@ -59,9 +59,20 @@ const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error }) =
 
         <button
             type="submit"
-            className="w-full py-3 px-4 border border-transparent rounded-full shadow-sm text-white bg-primary-blue hover:bg-primary-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue"
+            disabled={loading}
+            className="w-full py-3 px-4 border border-transparent rounded-full shadow-sm text-white bg-primary-blue hover:bg-primary-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
-            Sign in
+            {loading ? (
+                <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                </>
+            ) : (
+                'Sign in'
+            )}
         </button>
 
         <p className="text-center text-sm text-gray-600">
@@ -77,7 +88,7 @@ const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error }) =
     </form>
 );
 
-const SignupForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
+const SignupForm = ({ formData, setFormData, handleSubmit, setIsLogin, error, loading }) => (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
             <div>
@@ -138,6 +149,12 @@ const SignupForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
             </div>
         </div>
 
+        {error && (
+            <div className="text-red-500 text-sm text-center">
+                {error}
+            </div>
+        )}
+
         <div className="flex items-center">
             <input
                 id="terms"
@@ -155,9 +172,20 @@ const SignupForm = ({ formData, setFormData, handleSubmit, setIsLogin }) => (
 
         <button
             type="submit"
-            className="w-full py-3 px-4 border border-transparent rounded-full shadow-sm text-white bg-primary-blue hover:bg-primary-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue"
+            disabled={loading}
+            className="w-full py-3 px-4 border border-transparent rounded-full shadow-sm text-white bg-primary-blue hover:bg-primary-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
-            Create account
+            {loading ? (
+                <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating account...
+                </>
+            ) : (
+                'Create account'
+            )}
         </button>
 
         <p className="text-center text-sm text-gray-600">
@@ -187,11 +215,17 @@ export const Auth = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+
         try {
             setLoading(true);
+
+            if (!isLogin && formData.password !== formData.confirmPassword) {
+                setError("Passwords don't match");
+                return;
+            }
             
             if (isLogin) {
-                // Login request using fetch
                 const response = await fetch('http://127.0.0.1:8000/user/login/', {
                     method: 'POST',
                     headers: {
@@ -206,15 +240,12 @@ export const Auth = () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Handle successful login
                     localStorage.setItem('token', data.token);
                     navigate('/dashboard');
                 } else {
-                    // Handle login error
                     setError(data.message || 'Login failed');
                 }
             } else {
-                // Register request
                 const response = await fetch('http://127.0.0.1:8000/user/register/', {
                     method: 'POST',
                     headers: {
@@ -230,11 +261,15 @@ export const Auth = () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Handle successful registration
                     setIsLogin(true);
+                    setFormData({
+                        name: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: '',
+                    });
                     setError('Registration successful! Please login.');
                 } else {
-                    // Handle registration error
                     setError(data.message || 'Registration failed');
                 }
             }
@@ -265,6 +300,7 @@ export const Auth = () => {
                         handleSubmit={handleSubmit}
                         setIsLogin={setIsLogin}
                         error={error}
+                        loading={loading}
                     />
                 ) : (
                     <SignupForm 
@@ -272,6 +308,8 @@ export const Auth = () => {
                         setFormData={setFormData}
                         handleSubmit={handleSubmit}
                         setIsLogin={setIsLogin}
+                        error={error}
+                        loading={loading}
                     />
                 )}
             </div>

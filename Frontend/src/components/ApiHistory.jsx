@@ -157,39 +157,11 @@ export const ApiHistory = () => {
 
   const fetchApiHistory = async () => {
     // This is example data structure matching your JSON
-    const mockData = {
-      "2025-03-29 02:36:46.060014": {
-        status: true,
-        message: "Prediction successful",
-        method: "POST",
-        model: "level0",
-        result: 1,
-        status_code: 200,
-      },
-      "2025-03-29 02:36:53.245987": {
-        status: true,
-        message: "File uploaded successfully",
-        method: "POST",
-        model: "level1",
-        result: {
-          Atelectasis: 0.0999097153544426,
-          Cardiomegaly: 0.0284122433513403,
-          Consolidation: 0.0650446116924286,
-          Edema: 0.0253956951200962,
-          Effusion: 0.166715428233147,
-          Emphysema: 0.0307994820177555,
-          Fibrosis: 0.0139704626053572,
-          Hernia: 0.0017922242404893,
-          Infiltration: 0.277768164873123,
-          Mass: 0.0892783105373383,
-          Nodule: 0.0827349498867989,
-          Pleural_Thickening: 0.0519755035638809,
-          Pneumonia: 0.0216902587562799,
-          Pneumothorax: 0.0690135955810547,
-        },
-        status_code: 200,
-      },
-    };
+    const authToken = localStorage.getItem('auth_token');
+    const response = await fetch(`http://127.0.0.1:8000/user/gethistory/?auth_token=${authToken}`);
+    const data = await response.json();
+    console.log(data.history)
+    const mockData = data.history;
 
     // Convert the object to array and add timestamp as a field
     const formattedData = Object.entries(mockData).map(([timestamp, data]) => ({
@@ -428,7 +400,7 @@ export const ApiHistory = () => {
                             : "bg-indigo-100 text-indigo-800"
                         }`}
                       >
-                        {request.model.toUpperCase()}
+                        {request.model}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
