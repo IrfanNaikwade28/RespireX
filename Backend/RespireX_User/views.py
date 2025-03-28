@@ -31,8 +31,11 @@ def API_CALL(request, model_name):
         if request.method == 'POST':
             if model_name == 'level0':
                 model = SymptoScan()
-                print(model.test())
-                return JsonResponse({'result': 'POST request received! API call! ---- LEVEL 0'})
+                symptoms = data['symptoms']
+                symptoms = [i+1 for i in symptoms]
+                symptoms[0] -= 1
+                result = model.predict(symptoms)
+                return JsonResponse({'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200})
             elif model_name == 'level1':
                 return JsonResponse({'result': 'POST request received! API call! ---- LEVEL 1'})
             else:
