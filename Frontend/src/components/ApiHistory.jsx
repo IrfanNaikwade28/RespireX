@@ -142,9 +142,17 @@ const ConditionsModal = ({ isOpen, onClose, conditions }) => {
 export const ApiHistory = () => {
   const [apiRequests, setApiRequests] = useState([]);
   const [modalData, setModalData] = useState(null);
+  const [chartData, setChartData] = useState([]);
+  const [userStatus, setUserStatus] = useState({
+    isPremium: false,
+    isActive: false,
+    used: 0,
+    limit: 0
+  });
 
   useEffect(() => {
     fetchApiHistory();
+    fetchData();
   }, []);
 
   const fetchApiHistory = async () => {
@@ -192,6 +200,43 @@ export const ApiHistory = () => {
     setApiRequests(formattedData);
   };
 
+  const fetchData = async () => {
+    // This would be your API call
+    // Mock JSON data structure
+    const mockResponse = {
+      "status": {
+        "usage": {
+          "used": 75,      // number of used requests
+          "limit": 100     // total request limit
+        },
+        "user": {
+          "isPremium": true,
+          "isActive": true
+        }
+      }
+    };
+
+    // Transform the data for the pie chart
+    const transformedData = [
+      {
+        name: 'Used',
+        value: mockResponse.status.usage.used
+      },
+      {
+        name: 'Available',
+        value: mockResponse.status.usage.limit - mockResponse.status.usage.used
+      }
+    ];
+
+    setChartData(transformedData);
+    setUserStatus({
+      isPremium: mockResponse.status.user.isPremium,
+      isActive: mockResponse.status.user.isActive,
+      used: mockResponse.status.usage.used,
+      limit: mockResponse.status.usage.limit
+    });
+  };
+
   // Format the result based on the model level
   const formatResult = (result, model) => {
     if (model === "level0") {
@@ -206,19 +251,7 @@ export const ApiHistory = () => {
     return "Unknown";
   };
 
-  const chartData = [
-    {
-      name: "Successful",
-      value: apiRequests.filter((req) => req.status < 400).length,
-    },
-    {
-      name: "Failed",
-      value: apiRequests.filter((req) => req.status >= 400).length,
-    },
-  ];
-
-
-  const COLORS = ["#4F46E5", "#F44336"];
+  const COLORS = ["#4F46E5", "#E5E7EB"];
 
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
@@ -256,25 +289,43 @@ export const ApiHistory = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold text-slate-800">
-                  Status Distribution
+                  API Usage
                 </h2>
                 <div className="flex gap-2">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 2a1 1 0 00-.894.553L7.382 6H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V8a1 1 0 100-2h-3.382l-1.724-3.447A1 1 0 0010 2zm0 2.618L11.724 8H8.276L10 4.618z" clipRule="evenodd" />
-                    </svg>
-                    Premium
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    Active
+                  {userStatus.isPremium && (
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 2a1 1 0 00-.894.553L7.382 6H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V8a1 1 0 100-2h-3.382l-1.724-3.447A1 1 0 0010 2zm0 2.618L11.724 8H8.276L10 4.618z" clipRule="evenodd" />
+                      </svg>
+                      Premium
+                    </span>
+                  )}
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
+                    userStatus.isActive 
+                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${
+                      userStatus.isActive ? 'bg-green-500' : 'bg-red-500'
+                    }`}></span>
+                    {userStatus.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700">
-                Real-time
-              </span>
             </div>
+
+            {/* Usage Stats */}
+            <div className="flex justify-center gap-8 mb-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600">{userStatus.used}</div>
+                <div className="text-sm text-slate-600">Used</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-slate-600">{userStatus.limit}</div>
+                <div className="text-sm text-slate-600">Limit</div>
+              </div>
+            </div>
+
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -284,6 +335,8 @@ export const ApiHistory = () => {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
                   >
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index]} />
@@ -296,11 +349,24 @@ export const ApiHistory = () => {
                       borderRadius: "8px",
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
+                    formatter={(value, name) => [`${value} requests`, name]}
                   />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Usage Warning if close to limit */}
+            {userStatus.used / userStatus.limit > 0.8 && (
+              <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>You're approaching your API usage limit</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

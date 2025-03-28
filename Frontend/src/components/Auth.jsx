@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Move form components outside of Auth component
 const LoginForm = ({ formData, setFormData, handleSubmit, setIsLogin, error }) => (
@@ -182,15 +183,13 @@ export const Auth = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-<<<<<<< HEAD
-=======
-        setError('');
-        setLoading(true);
-
         try {
+            setLoading(true);
+            
             if (isLogin) {
                 // Login request using fetch
                 const response = await fetch('http://127.0.0.1:8000/user/login/', {
@@ -199,36 +198,52 @@ export const Auth = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        username: formData.email,  // Using email as username
-                        password: formData.password
-                    })
+                        email: formData.email,
+                        password: formData.password,
+                    }),
                 });
 
                 const data = await response.json();
-                console.log(data)
-                if (response.ok && data.status) {
-                    console.log('Login successful:', data);
-                    localStorage.setItem('auth_token', data.auth_token);
-                    localStorage.setItem('user_data', JSON.stringify(data));
-                    window.location.href = '/';
+
+                if (response.ok) {
+                    // Handle successful login
+                    localStorage.setItem('token', data.token);
+                    navigate('/dashboard');
                 } else {
+                    // Handle login error
                     setError(data.message || 'Login failed');
                 }
             } else {
-                // Handle signup logic here
-                if (formData.password !== formData.confirmPassword) {
-                    setError('Passwords do not match');
-                    return;
+                // Register request
+                const response = await fetch('http://127.0.0.1:8000/user/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        password: formData.password,
+                        name: formData.name,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Handle successful registration
+                    setIsLogin(true);
+                    setError('Registration successful! Please login.');
+                } else {
+                    // Handle registration error
+                    setError(data.message || 'Registration failed');
                 }
-                // Add signup API call here using fetch
             }
-        } catch (error) {
-            console.error('Auth error:', error);
-            setError('Authentication failed. Please try again.');
+        } catch (err) {
+            setError('An error occurred. Please try again.');
+            console.error('Auth error:', err);
         } finally {
             setLoading(false);
         }
->>>>>>> 0fbe551681753080c30f3984839ab6daf40705bc
     };
 
     return (
@@ -254,7 +269,7 @@ export const Auth = () => {
                 ) : (
                     <SignupForm 
                         formData={formData}
-                        setFormData={setFormData}a
+                        setFormData={setFormData}
                         handleSubmit={handleSubmit}
                         setIsLogin={setIsLogin}
                     />
