@@ -322,37 +322,41 @@ export const ResultsDashboard = () => {
                     {/* Level 0 - Clinical Analysis */}
                     <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold text-slate-800">Clinical Analysis</h2>
+                            <h2 className="text-xl font-semibold text-slate-800">Patient Data</h2>
                             <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-indigo-50 text-indigo-700">
                                 Level 0
                             </span>
                         </div>
-                        
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <p className="text-sm text-slate-600 mb-1">Risk Assessment</p>
-                                <p className="text-2xl font-bold text-indigo-600">{level0Result.prediction}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm text-slate-600 mb-1">Confidence</p>
-                                <p className="text-2xl font-bold text-indigo-600">{level0Result.confidence}%</p>
-                            </div>
-                        </div>
 
-                        <div className="space-y-4">
-                            <p className="text-sm font-medium text-slate-700">Key Risk Factors</p>
-                            {level0Result.riskFactors.map((factor, index) => (
-                                <div key={index} className="flex items-center justify-between">
-                                    <span className="text-slate-600">{factor.factor}</span>
-                                    <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-indigo-500 rounded-full"
-                                            style={{ width: `${factor.impact * 100}%` }}
-                                        />
+                        {/* Fetching data from localStorage */}
+                        {(() => {
+                            const data = JSON.parse(localStorage.getItem('true_false_data'));
+                            if (!data) return <p className="text-red-500">No data available</p>;
+
+                            return (
+                                <div className="space-y-4">
+                                    <p className="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2">Age & Gender</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-600">Gender:</span>
+                                        <span className="text-slate-800 font-semibold">{data.gender}</span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-600">Age:</span>
+                                        <span className="text-slate-800 font-semibold">{data.age}</span>
+                                    </div>
+
+                                    <p className="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2">Symptoms</p>
+                                    {Object.entries(data.symptoms).map(([symptom, isPresent], index) => (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <span className="text-slate-600">{symptom.replace(/_/g, ' ')}</span>
+                                            <span className={`font-semibold text-xs p-2 px-3 rounded-full ${isPresent ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                                {isPresent ? 'Present' : 'Not Present'}
+                                            </span>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Combined Analysis */}
