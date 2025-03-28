@@ -4,7 +4,7 @@ import { XrayAnalysis } from "./components/XrayAnalysis";
 import { ResultsDashboard } from "./components/ResultsDashboard";
 import { Home } from "./components/Home";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-// import { Auth } from './components/Auth';
+import { Auth } from './components/Auth';
 
 function App() {
   return (
@@ -12,6 +12,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/patient" element={<PatientAnalysis />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/xray" element={<XrayAnalysis />} />
         <Route path="/results" element={<ResultsDashboard />} />
         <Route path="/" element={<Home />} />
