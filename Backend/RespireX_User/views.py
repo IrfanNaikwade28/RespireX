@@ -145,3 +145,16 @@ def API_CALL(request, model_name):
             return JsonResponse({'error': 'Invalid request method'}, status=405)
     else:
         return JsonResponse({'error': 'Invalid auth_token'}, status=401)
+
+def user_login(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data['username']
+        password = data['password']
+        user = User.objects.filter(username=username, password=password).first()
+        if user:
+            return JsonResponse({'status': True, 'message': 'Login successful', 'method': 'POST', 'model': 'level0', 'account_type': '0', 'total_hits': 0, 'hit_limit': 20, 'status_code': 200})
+        else:
+            return JsonResponse({'status': False, 'message': 'Invalid username or password', 'method': 'POST', 'model': 'level0', 'account_type': '0', 'total_hits': 0, 'hit_limit': 20, 'status_code': 400}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
