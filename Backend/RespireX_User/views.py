@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -133,7 +133,19 @@ def API_CALL(request, model_name):
                         except Exception as e:
                             return JsonResponse({'status': False, 'message': f'Prediction error: {str(e)}'}, status=500)
 
-                        historyadd = {f"{current_date_time}": {'status': True, 'message': 'File uploaded successfully', 'method': 'POST', 'model': 'level1', 'file_path': file_path, 'result': predictions, 'status_code': 200}}
+                        historyadd = {
+                            f"{current_date_time}": {
+                                'status': True, 
+                                'message': 'File uploaded successfully', 
+                                'method': 'POST', 
+                                'model': 'level1', 
+                                'file_path': file_path, 
+                                'result': predictions, 
+                                'status_code': 200
+                            },
+                            'result': predictions,
+                            'file_path': file_path,
+                        }
                         user.history.update(historyadd)
                         user.total_hits += 1
                         user.save()
@@ -243,6 +255,18 @@ def level1Analysis(request):
             clinical_notes = request.POST.get('clinical_notes', '')
             patient_data = request.POST.get('patient_data', '{}')
             
+            # Save a copy of the image for sending in the response
+            import base64
+            from io import BytesIO
+            
+            # Reset file pointer to beginning
+            image_file.seek(0)
+            image_data = image_file.read()
+            encoded_image = base64.b64encode(image_data).decode('utf-8')
+            
+            # Reset file pointer again for the API request
+            image_file.seek(0)
+            
             # Create a new request to the API endpoint
             api_url = 'http://127.0.0.1:8000/api/0/level1/'
             
@@ -265,7 +289,10 @@ def level1Analysis(request):
             print("----------------------------------------------------------------------------")
             # Check if the request was successful
             if response.status_code == 200:
-                return JsonResponse(response.json())
+                # Add the image to the response
+                response_data = response.json()
+                response_data['image'] = encoded_image
+                return JsonResponse(response_data)
             else:
                 # Return error if API request failed
                 return JsonResponse({
@@ -280,4 +307,58 @@ def level1Analysis(request):
             print(traceback.format_exc())  # Print the full stack trace
             return JsonResponse({'status': False, 'message': f'Error: {str(e)}'}, status=500)
     
+    return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def get_image(request):
+    """
+    Serve an image file from the file system based on the path parameter.
+    Path should be URL-encoded and provided as a query parameter 'path'.
+    """
+    try:
+        # Get file path from request query parameters
+        file_path = request.GET.get('path')
+        print(file_path)
+        if not file_path:
+            return HttpResponse('No file path provided', status=400)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return HttpResponse('File not found', status=404)
+        
+        # Security check to ensure the path is within the collected_files directory
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        collected_files_dir = os.path.join(base_dir, 'collected_files')
+        
+        # Normalize paths for comparison
+        file_path = os.path.normpath(file_path)
+        collected_files_dir = os.path.normpath(collected_files_dir)
+        
+        # Check if the file is within the allowed directory
+        if not file_path.startswith(collected_files_dir):
+            return HttpResponse('Access denied', status=403)
+            
+        # Determine content type based on file extension
+        content_type = 'image/jpeg'  # Default to JPEG
+        if file_path.lower().endswith('.png'):
+            content_type = 'image/png'
+        elif file_path.lower().endswith('.gif'):
+            content_type = 'image/gif'
+            
+        # Serve the file
+        return FileResponse(open(file_path, 'rb'), content_type=content_type)
+        
+    except Exception as e:
+        import traceback
+        print(f"Error serving image: {str(e)}")
+        print(traceback.format_exc())
+        return HttpResponse(f'Error: {str(e)}', status=500)
+
+def get_history(request):
+    if request.method == 'GET':
+        auth_token = request.GET.get('auth_token')
+        print(auth_token)
+        user = APIUser.objects.filter(auth_token=auth_token).first()
+        print(user.history)
+        return JsonResponse({'status': True, 'message': 'History fetched successfully', 'method': 'GET', 'model': 'level0', 'history': user.history})
     return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)

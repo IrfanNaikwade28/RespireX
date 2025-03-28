@@ -1,7 +1,125 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { useState, useEffect } from 'react';
 
 export const ResultsDashboard = () => {
-    // Dummy data - replace with actual results
+    const [xrayResult, setXrayResult] = useState(null);
+    const [chartData, setChartData] = useState([]);
+    const [imageSrc, setImageSrc] = useState(null);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [imageError, setImageError] = useState(null);
+    
+    // Sample detailed results data
+    // Get detailed results from the API response stored in localStorage
+    const [detailedResults, setDetailedResults] = useState([]);
+    
+    useEffect(() => {
+        const storedResult = localStorage.getItem('xray_analysis_result');
+        if (storedResult) {
+            try {
+                const parsedResult = JSON.parse(storedResult);
+                if (parsedResult && parsedResult.result) {
+                    // Transform the API result into the format needed for detailed results
+                    const formattedResults = Object.entries(parsedResult.result).map(([disease, currentValue]) => {
+                        // Define standard threshold values for each disease
+                        const standardValues = {
+                            "Atelectasis": 0.63,
+                            "Cardiomegaly": 0.64,
+                            "Consolidation": 0.68,
+                            "Edema": 0.74,
+                            "Effusion": 0.70,
+                            "Emphysema": 0.60,
+                            "Fibrosis": 0.61,
+                            "Hernia": 0.65,
+                            "Infiltration": 0.61,
+                            "Mass": 0.61,
+                            "Nodule": 0.55,
+                            "Pleural_Thickening": 0.60,
+                            "Pneumonia": 0.63,
+                            "Pneumothorax": 0.62
+                        };
+                        
+                        const standardValue = standardValues[disease] || 0.60;
+                        const numericValue = typeof currentValue === 'string' ? parseFloat(currentValue) : currentValue;
+                        const multipliedValue = numericValue * 10; // Multiply the result by 100
+                        
+                        return {
+                            disease,
+                            standardValue,
+                            currentValue: multipliedValue, // Use the multiplied value
+                            status: multipliedValue > standardValue ? "Positive" : "Negative"
+                        };
+                    });
+                    
+                    setDetailedResults(formattedResults);
+                }
+            } catch (err) {
+                console.error('Error parsing detailed results:', err);
+            }
+        }
+    }, []);
+    
+    useEffect(() => {
+        // Get xray analysis result from localStorage
+        const storedResult = localStorage.getItem('xray_analysis_result');
+        if (storedResult) {
+            try {
+                const parsedResult = JSON.parse(storedResult);
+                console.log('Parsed result:', parsedResult);
+                
+                setXrayResult(parsedResult);
+                
+                // Set image source if file_path exists
+                if (parsedResult.file_path) {
+                    const imgUrl = `http://127.0.0.1:8000/user/getimg?path=${encodeURIComponent(parsedResult.file_path)}`;
+                    setImageSrc(imgUrl);
+                    console.log('Image URL:', imgUrl);
+                } else {
+                    console.log('No file path found in results');
+                    setImageLoading(false);
+                }
+                
+                // Prepare chart data
+                if (parsedResult && parsedResult.result) {
+                    const abnormalityData = Object.entries(parsedResult.result)
+                        .map(([name, probability]) => ({ 
+                            name, 
+                            probability: typeof probability === 'string' ? parseFloat(probability) : probability 
+                        }))
+                        .sort((a, b) => b.probability - a.probability);
+                    
+                    console.log('Prepared chart data:', abnormalityData);
+                    setChartData(abnormalityData);
+                }
+            } catch (err) {
+                console.error('Error parsing results:', err);
+                setImageLoading(false);
+            }
+        } else {
+            console.log('No xray_analysis_result found in localStorage');
+            setImageLoading(false);
+        }
+    }, []);
+
+    // Handle image load events
+    const handleImageLoad = () => {
+        setImageLoading(false);
+        setImageError(null);
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        setImageError('Failed to load image');
+        console.error('Error loading image from:', imageSrc);
+    };
+
+    // Get file name from path to display as alternative text
+    const getFileName = (filePath) => {
+        if (!filePath) return 'No file';
+        const parts = filePath.split(/[\/\\]/); // Split by either forward or backward slashes
+        return parts[parts.length - 1];
+    };
+
+    // Fallback to original data structure if no data is loaded
     const level0Result = {
         prediction: "High Risk",
         confidence: 85,
@@ -13,9 +131,13 @@ export const ResultsDashboard = () => {
     };
 
     const level1Result = {
+        file_path: (() => {
+            const analysisResult = JSON.parse(localStorage.getItem('xray_analysis_result') || '{}');
+            return analysisResult.file_path || "https://www.google.com";
+        })(),
         prediction: "Suspicious",
         confidence: 78,
-        abnormalities: [
+        abnormalities: chartData.length > 0 ? chartData : [
             { name: "Mass", probability: 0.75 },
             { name: "Nodule", probability: 0.65 },
             { name: "Infiltration", probability: 0.45 }
@@ -43,12 +165,12 @@ export const ResultsDashboard = () => {
                             <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
                                 Analysis Results
                             </h1>
-                            <p className="text-slate-600 mt-2">Patient ID: #12345 | Date: {new Date().toLocaleDateString()}</p>
+                            <p className="text-slate-600 w-full mt-2">Date: {new Date().toLocaleDateString()} | Token: {localStorage.getItem('auth_token')?.replace(/.(?=.{10})/g, '*') || ''}</p>
                         </div>
-                        <div className="text-right">
+                        {/* <div className="text-right">
                             <div className="text-2xl font-bold text-indigo-600">{combinedRisk.overall}%</div>
                             <div className="text-sm text-slate-600">Overall Risk Score</div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -58,17 +180,36 @@ export const ResultsDashboard = () => {
                     <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
                         <h2 className="text-xl font-semibold text-slate-800 mb-4">X-ray Image</h2>
                         <div className="relative aspect-square bg-black rounded-xl overflow-hidden group">
-                            {/* Replace with actual X-ray image */}
-                            <img 
-                                src="/sample-xray.jpg" 
-                                alt="Chest X-ray"
-                                className="w-full h-full object-cover opacity-90"
-                            />
-                            {/* Overlay with detected regions */}
+                            {imageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-12 h-12 border-t-2 border-b-2 border-indigo-500 rounded-full animate-spin"></div>
+                                </div>
+                            )}
+                            
+                            {imageSrc && !imageError ? (
+                                <img 
+                                    src={imageSrc}
+                                    alt="Chest X-ray"
+                                    className="w-full h-full object-contain"
+                                    onLoad={handleImageLoad}
+                                    onError={handleImageError}
+                                />
+                            ) : (
+                                <img 
+                                    src={`http://127.0.0.1:8000/user/getimg?path=${encodeURIComponent(xrayResult?.file_path || '')}`}
+                                    alt="Chest X-ray"
+                                    className="w-full h-full object-contain opacity-90"
+                                    onError={handleImageError}
+                                />
+                            )}  
+                            
+                            {/* Overlay with file info - only show on hover */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                                     <p className="font-medium">Click to view full size</p>
-                                    <p className="text-sm text-gray-300">Detected regions highlighted</p>
+                                    <p className="text-sm text-gray-300">
+                                        {xrayResult?.file_path ? getFileName(xrayResult.file_path) : 'Detected regions highlighted'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -84,16 +225,16 @@ export const ResultsDashboard = () => {
                             <h2 className="text-xl font-semibold text-slate-800">Abnormality Detection</h2>
                             <div className="flex gap-2">
                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
-                                    AI Verified
+                                    AI Analysis
                                 </span>
                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">
-                                    Level 1
+                                    X-ray Analysis
                                 </span>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            {level1Result.abnormalities.map((item, index) => (
+                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            {level1Result.abnormalities.slice(0, 4).map((item, index) => (
                                 <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="font-medium text-slate-700">{item.name}</span>
@@ -109,9 +250,9 @@ export const ResultsDashboard = () => {
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                        </div> */}
 
-                        <div className="h-64 mt-6">
+                        <div className="h-[600px] mt-6">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={level1Result.abnormalities}>
                                     <XAxis dataKey="name" />
@@ -138,6 +279,41 @@ export const ResultsDashboard = () => {
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
+                    </div>
+                </div>
+
+                {/* Detailed Results Table */}
+                <div className="mb-8 bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+                    <h2 className="text-xl font-semibold text-slate-800 mb-6">Detailed Analysis Results</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Disease Name</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Standard Value</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Current Value</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {detailedResults.map((item, index) => (
+                                    <tr key={index} className={`border-b border-slate-100 ${index % 2 === 0 ? 'bg-slate-50/30' : ''}`}>
+                                        <td className="py-3 px-4 text-slate-700 font-medium">{item.disease}</td>
+                                        <td className="py-3 px-4 text-slate-600">{item.standardValue.toFixed(2)}</td>
+                                        <td className="py-3 px-4 text-slate-600">{item.currentValue.toFixed(8)}</td>
+                                        <td className="py-3 px-4">
+                                            <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                                                item.status === 'Positive' 
+                                                    ? 'bg-red-50 text-red-700' 
+                                                    : 'bg-green-50 text-green-700'
+                                            }`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -224,6 +400,7 @@ export const ResultsDashboard = () => {
                                             fill="#8884d8"
                                             paddingAngle={5}
                                             dataKey="value"
+                                            isAnimationActive={true}
                                         >
                                             {combinedRisk.data.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
