@@ -185,8 +185,6 @@ export const Auth = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-<<<<<<< HEAD
-=======
         setError('');
         setLoading(true);
 
@@ -228,7 +226,6 @@ export const Auth = () => {
         } finally {
             setLoading(false);
         }
->>>>>>> 0fbe551681753080c30f3984839ab6daf40705bc
     };
 
     return (
