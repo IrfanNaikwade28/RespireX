@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,5 +6,31 @@
 
 body{
     background-color:#F6F6F6;
-    font-family: "Sora", sans-serif;
+    font-family: "Inter", sans-serif;
 }
+
+
+@layer utilities {
+    .bg-clip-text {
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+  }
+  
+  .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 3px;
+  }

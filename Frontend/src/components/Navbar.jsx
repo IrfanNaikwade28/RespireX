@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import profile from '../assets/icons/profile.svg';
 import logo from '../assets/images/logo.png';
 export const Navbar = () => {
     const [activeItem, setActiveItem] = useState('Home');
@@ -10,7 +11,7 @@ export const Navbar = () => {
                 <span className='text-lg font-semibold'>RespireX</span>
             </div>
 
-            <div className="flex gap-2 rounded-full bg-white/30 backdrop-blur-sm p-1.5 shadow-lg">
+            <div className="flex gap-2">
                 {['Home', 'Features', 'Consultancy', 'Contact'].map((item, index) => {
                     return (
                         <button
@@ -36,7 +37,7 @@ export const Navbar = () => {
                     >
                         <div className="w-9 h-9 rounded-full overflow-hidden">
                             <img
-                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                src={profile}
                                 alt="Profile"
                                 className="w-full h-full object-cover"
                             />

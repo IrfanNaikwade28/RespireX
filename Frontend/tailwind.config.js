@@ -9,6 +9,9 @@ export default {
       colors:{
         "primary-blue":"#0064F1",
         "secondary-gray":"#EFEFEF"
+      },
+      boxShadow:{
+        'custom': '0 0 1px rgba(0, 0, 0, 0.25)'
       }
     },
   },
