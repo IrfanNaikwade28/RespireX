@@ -16,6 +16,7 @@ import pandas as pd
 import csv
 import requests
 from requests_toolbelt.multipart import MultipartEncoder
+from .GeminiAnalyze import summarize_with_gemini
 # Create your views here.
 @csrf_exempt
 def API_CALL(request, model_name):
@@ -186,6 +187,7 @@ def level0Analysis(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         symptoms = data['symptoms']
+        clinical_notes = data['clinical_notes']
         symptoms_data = []
         symptoms_data.append(1 if data['gender'] == 'Male' else 0)
         symptoms_data.append(data['age'])
@@ -230,11 +232,11 @@ def level0Analysis(request):
             result = model.predict(symptoms)
             try:
                 current_date_time = datetime.now()
-                historyadd = {f"{current_date_time}": {'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200}}
+                historyadd = {f"{current_date_time}": {'status': True, 'message': 'Prediction successful 868686', 'method': 'POST', 'model': 'level0', 'result': result, 'clinical_notes': clinical_notes, 'status_code': 200}}
                 user.history.update(historyadd)
                 user.total_hits += 1
                 user.save()
-                return JsonResponse({'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200, 'true_false_data': true_false_data})
+                return JsonResponse({'status': True, 'message': 'Prediction successful  fgrfhtfyhfyfy', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200, 'clinical_notes': clinical_notes,'true_false_data': true_false_data})
             except Exception as e:
                 return JsonResponse({'status': False, 'message': 'Prediction failed', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 400})
     
@@ -291,7 +293,6 @@ def level1Analysis(request):
             if response.status_code == 200:
                 # Add the image to the response
                 response_data = response.json()
-                response_data['image'] = encoded_image
                 return JsonResponse(response_data)
             else:
                 # Return error if API request failed
@@ -359,6 +360,35 @@ def get_history(request):
         auth_token = request.GET.get('auth_token')
         print(auth_token)
         user = APIUser.objects.filter(auth_token=auth_token).first()
-        print(user.history)
-        return JsonResponse({'status': True, 'message': 'History fetched successfully', 'method': 'GET', 'model': 'level0', 'history': user.history})
+        used_token = user.total_hits
+        if user.account_type == '2':
+            total_token = 1000
+        elif user.account_type == '1':
+            total_token = 100
+        else:
+            total_token = 1
+        is_premium = True if user.account_type == '1' else False
+        is_active = True if user.is_active else False
+        print(used_token, total_token, is_premium, is_active)
+        graph_data = {
+            "usage": {
+                "used": used_token,
+                "limit": total_token
+            },
+            "user": {
+                "isPremium": is_premium,
+                "isActive": is_active
+            }
+        }
+        return JsonResponse({'status': True, 'message': 'History fetched successfully', 'method': 'GET', 'model': 'level0', 'graph_data': graph_data, 'history': user.history})
+    return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
+@csrf_exempt
+def get_insight(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        true_false_data = data['true_false_data']
+        xray_analysis_result = data['xray_analysis_result']
+        text = summarize_with_gemini(true_false_data, xray_analysis_result)
+        print(text)
+        return JsonResponse({'status': True, 'message': 'Insight fetched successfully', 'method': 'POST', 'model': 'level0', 'insight': text})
     return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)

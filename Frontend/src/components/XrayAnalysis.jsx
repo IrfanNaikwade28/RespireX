@@ -9,7 +9,7 @@ export const XrayAnalysis = () => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [clinicalNotes, setClinicalNotes] = useState('');
+    const [clinicalNotes, setClinicalNotes] = useState(localStorage.getItem('clinical_notes').replace(/"/g, ''));
     const [analysisResult, setAnalysisResult] = useState(null);
 
     const handleFileSelect = (event) => {

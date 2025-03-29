@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { useState, useEffect } from 'react';
+import { marked } from 'marked';
 
 export const ResultsDashboard = () => {
     const [xrayResult, setXrayResult] = useState(null);
@@ -9,7 +10,6 @@ export const ResultsDashboard = () => {
     const [imageError, setImageError] = useState(null);
     
     // Sample detailed results data
-    // Get detailed results from the API response stored in localStorage
     const [detailedResults, setDetailedResults] = useState([]);
     
     useEffect(() => {
@@ -18,9 +18,7 @@ export const ResultsDashboard = () => {
             try {
                 const parsedResult = JSON.parse(storedResult);
                 if (parsedResult && parsedResult.result) {
-                    // Transform the API result into the format needed for detailed results
                     const formattedResults = Object.entries(parsedResult.result).map(([disease, currentValue]) => {
-                        // Define standard threshold values for each disease
                         const standardValues = {
                             "Atelectasis": 0.63,
                             "Cardiomegaly": 0.64,
@@ -45,7 +43,7 @@ export const ResultsDashboard = () => {
                         return {
                             disease,
                             standardValue,
-                            currentValue: multipliedValue, // Use the multiplied value
+                            currentValue: multipliedValue,
                             status: multipliedValue > standardValue ? "Positive" : "Negative"
                         };
                     });
@@ -59,26 +57,19 @@ export const ResultsDashboard = () => {
     }, []);
     
     useEffect(() => {
-        // Get xray analysis result from localStorage
         const storedResult = localStorage.getItem('xray_analysis_result');
         if (storedResult) {
             try {
                 const parsedResult = JSON.parse(storedResult);
-                console.log('Parsed result:', parsedResult);
-                
                 setXrayResult(parsedResult);
                 
-                // Set image source if file_path exists
                 if (parsedResult.file_path) {
                     const imgUrl = `http://127.0.0.1:8000/user/getimg?path=${encodeURIComponent(parsedResult.file_path)}`;
                     setImageSrc(imgUrl);
-                    console.log('Image URL:', imgUrl);
                 } else {
-                    console.log('No file path found in results');
                     setImageLoading(false);
                 }
                 
-                // Prepare chart data
                 if (parsedResult && parsedResult.result) {
                     const abnormalityData = Object.entries(parsedResult.result)
                         .map(([name, probability]) => ({ 
@@ -87,7 +78,6 @@ export const ResultsDashboard = () => {
                         }))
                         .sort((a, b) => b.probability - a.probability);
                     
-                    console.log('Prepared chart data:', abnormalityData);
                     setChartData(abnormalityData);
                 }
             } catch (err) {
@@ -95,12 +85,10 @@ export const ResultsDashboard = () => {
                 setImageLoading(false);
             }
         } else {
-            console.log('No xray_analysis_result found in localStorage');
             setImageLoading(false);
         }
     }, []);
 
-    // Handle image load events
     const handleImageLoad = () => {
         setImageLoading(false);
         setImageError(null);
@@ -109,17 +97,14 @@ export const ResultsDashboard = () => {
     const handleImageError = () => {
         setImageLoading(false);
         setImageError('Failed to load image');
-        console.error('Error loading image from:', imageSrc);
     };
 
-    // Get file name from path to display as alternative text
     const getFileName = (filePath) => {
         if (!filePath) return 'No file';
-        const parts = filePath.split(/[\/\\]/); // Split by either forward or backward slashes
+        const parts = filePath.split(/[\/\\]/);
         return parts[parts.length - 1];
     };
 
-    // Fallback to original data structure if no data is loaded
     const level0Result = {
         prediction: "High Risk",
         confidence: 85,
@@ -154,6 +139,58 @@ export const ResultsDashboard = () => {
 
     const COLORS = ['#4F46E5', '#818CF8', '#C7D2FE'];
 
+    // AI Insights Component
+    const AIInsights = () => {
+        const [insights, setInsights] = useState('Fetching Insights...');
+        const [error, setError] = useState('');
+
+        useEffect(() => {
+            const fetchInsights = async () => {
+                const authToken = localStorage.getItem('auth_token');
+                const trueFalseData = JSON.parse(localStorage.getItem('true_false_data'));
+                const clinicalNotes = JSON.parse(localStorage.getItem('clinical_notes'));
+                const xrayAnalysisResult = JSON.parse(localStorage.getItem('xray_analysis_result'));
+
+                try {
+                    const response = await fetch(`http://127.0.0.1:8000/user/get_insight/?auth_token=${authToken}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            true_false_data: trueFalseData,
+                            xray_analysis_result: xrayAnalysisResult,
+                            clinical_notes: clinicalNotes
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setInsights(marked(data.insight));
+                    } else {
+                        setError('Failed to fetch insights.');
+                    }
+                } catch (err) {
+                    setError('Failed to fetch insights.');
+                }
+            };
+
+            fetchInsights();
+        }, []);
+
+        return (
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-slate-800">AI Insights</h2>
+                </div>
+                <div className="markdown">
+                    {/* <p className="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2">{error || insights}</p> */}
+                    <div className="mt-4" dangerouslySetInnerHTML={{ __html: insights }}></div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
             {/* Main Content */}
@@ -167,10 +204,6 @@ export const ResultsDashboard = () => {
                             </h1>
                             <p className="text-slate-600 w-full mt-2">Date: {new Date().toLocaleDateString()} | Token: {localStorage.getItem('auth_token')?.replace(/.(?=.{10})/g, '*') || ''}</p>
                         </div>
-                        {/* <div className="text-right">
-                            <div className="text-2xl font-bold text-indigo-600">{combinedRisk.overall}%</div>
-                            <div className="text-sm text-slate-600">Overall Risk Score</div>
-                        </div> */}
                     </div>
                 </div>
 
@@ -232,25 +265,6 @@ export const ResultsDashboard = () => {
                                 </span>
                             </div>
                         </div>
-
-                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            {level1Result.abnormalities.slice(0, 4).map((item, index) => (
-                                <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-slate-700">{item.name}</span>
-                                        <span className="text-sm font-semibold text-indigo-600">
-                                            {(item.probability * 100).toFixed(1)}%
-                                        </span>
-                                    </div>
-                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"
-                                            style={{ width: `${item.probability * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div> */}
 
                         <div className="h-[600px] mt-6">
                             <ResponsiveContainer width="100%" height="100%">
@@ -317,107 +331,8 @@ export const ResultsDashboard = () => {
                     </div>
                 </div>
 
-                {/* Results Grid - Clinical & Combined Analysis */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    {/* Level 0 - Clinical Analysis */}
-                    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold text-slate-800">Patient Data</h2>
-                            <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-indigo-50 text-indigo-700">
-                                Level 0
-                            </span>
-                        </div>
-
-                        {/* Fetching data from localStorage */}
-                        {(() => {
-                            const data = JSON.parse(localStorage.getItem('true_false_data'));
-                            if (!data) return <p className="text-red-500">No data available</p>;
-
-                            return (
-                                <div className="space-y-4">
-                                    <p className="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2">Age & Gender</p>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-600">Gender:</span>
-                                        <span className="text-slate-800 font-semibold">{data.gender}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-600">Age:</span>
-                                        <span className="text-slate-800 font-semibold">{data.age}</span>
-                                    </div>
-
-                                    <p className="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2">Symptoms</p>
-                                    {Object.entries(data.symptoms).map(([symptom, isPresent], index) => (
-                                        <div key={index} className="flex items-center justify-between">
-                                            <span className="text-slate-600">{symptom.replace(/_/g, ' ')}</span>
-                                            <span className={`font-semibold text-xs p-2 px-3 rounded-full ${isPresent ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                                                {isPresent ? 'Present' : 'Not Present'}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            );
-                        })()}
-                    </div>
-
-                    {/* Combined Analysis */}
-                    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300">
-                        <h2 className="text-xl font-semibold text-slate-800 mb-6">Combined Risk Analysis</h2>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="flex items-center justify-center">
-                                <div className="relative">
-                                    <svg className="w-40 h-40 transform -rotate-90">
-                                        <circle
-                                            className="text-slate-200"
-                                            strokeWidth="10"
-                                            stroke="currentColor"
-                                            fill="transparent"
-                                            r="70"
-                                            cx="80"
-                                            cy="80"
-                                        />
-                                        <circle
-                                            className="text-indigo-600"
-                                            strokeWidth="10"
-                                            strokeLinecap="round"
-                                            stroke="currentColor"
-                                            fill="transparent"
-                                            r="70"
-                                            cx="80"
-                                            cy="80"
-                                            strokeDasharray={`${combinedRisk.overall * 4.4} 440`}
-                                        />
-                                    </svg>
-                                    <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl font-bold text-slate-800">
-                                        {combinedRisk.overall}%
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={combinedRisk.data}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={40}
-                                            outerRadius={50}
-                                            fill="#8884d8"
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                            isAnimationActive={true}
-                                        >
-                                            {combinedRisk.data.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                        <Legend verticalAlign="bottom" height={36} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* AI Insights Section */}
+                <AIInsights />
 
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center mt-8">
