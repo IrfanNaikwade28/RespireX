@@ -166,7 +166,7 @@ def API_CALL(request, model_name):
 def user_login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        username = data['username']
+        username = data['email']
         password = data['password']
         user = User.objects.filter(username=username).first()
         api_data = APIUser.objects.filter(user=user).first()

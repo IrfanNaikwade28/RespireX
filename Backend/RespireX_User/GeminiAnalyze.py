@@ -20,13 +20,9 @@ def summarize_with_gemini(true_false_data, xray_analysis_result):
     {xray_analysis_result}
 
     Generate a detailed analysis of the data.
-    Use Proper Markdown Format.I want data in professional medical report format.
-    Use Markdown add Spacing between paragraphs. Use Title and Subtitle to separate sections.
-    Use Space Between Different Paragraph and data you can use html tags.
-    Format the response like a professional medical report.
+    Add Space Between Different Paragraphs.
+    Use Title and Subtitle to separate sections.
     Do not add image path in response.
-    Add Space Between Different Paragraph and data you can use html tags.
-    replace ** by bold in response. use h1 h2 h3 h4 h5 h6 tags for headings.
     """
     response = model.generate_content(prompt)
     print(response.text)

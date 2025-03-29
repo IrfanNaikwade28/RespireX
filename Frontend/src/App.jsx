@@ -19,6 +19,7 @@ function App() {
         <Route path="/results" element={<ResultsDashboard />} />
         <Route path="/apihistory" element={<ApiHistory />} />
         <Route path="/upgrade" element={<Upgrade/>} />
+        <Route path="/xray" element={<XrayAnalysis />} />
         <Route path="/" element={<Home />} />
       </Routes>
     </Router>

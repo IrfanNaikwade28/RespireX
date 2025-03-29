@@ -226,6 +226,15 @@ export const ApiHistory = () => {
     return "Unknown";
   };
 
+  const CurlCommand = () => {
+    return (
+      <pre className="text-slate-600">
+        curl -X POST -H "Content-Type: application/json" -d '{{"auth_token": "95023e811cdbfcece2930550a1896d027000e48c6ff29223fbf0b620a8c57549", "symptoms": [0, 55, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2]}}' http://127.0.0.1:8000/api/0/level0
+      </pre>
+    );
+  };
+
+  console.log(CurlCommand())
   const COLORS = ["#4F46E5", "#E5E7EB"];
 
   return (
@@ -261,13 +270,33 @@ export const ApiHistory = () => {
 
         {/* Charts Grid */}
         <div className="flex flex-col md:flex-row justify-between items-start mb-8 w-full gap-4">
-          {/* Auth Token Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300 flex-1 mt-4 md:mt-0">
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300 flex-1 mt-4 md:mt-0 w-1/2">
             <h2 className="text-lg font-semibold text-slate-800">Auth Token</h2>
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-slate-600 truncate">{localStorage.getItem('auth_token')}</span>
+            <div className="flex relative items-end justify-between mt-2 mb-5 gap-2">
+                <span className="text-slate-600 p-2 rounded-lg bg-slate-100">
+                <span dangerouslySetInnerHTML={{ __html: `curl -X POST -H "Content-Type: application/json" -d '{{"auth_token": "${localStorage.getItem('auth_token')}", "symptoms": [0, 55, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2]}}' http://127.0.0.1:8000/api/0/level0` }} />
+              </span>
               <button
-                className="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition duration-200"
+                className="absolute right-2 bottom-2 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition duration-200"
+                onClick={() => {
+                  navigator.clipboard.writeText(localStorage.getItem('auth_token'));
+                  alert('Auth token copied to clipboard!');
+                }}
+              >
+                Copy
+              </button>
+            </div>
+              
+            <hr />
+
+            <h2 className="text-lg font-semibold text-slate-800">Auth Token</h2>
+            <div className="flex relative items-end justify-between mt-2 mb-5 gap-2 w-full">
+                <span className="text-slate-600 p-2 rounded-lg bg-slate-100">
+                <span dangerouslySetInnerHTML={{ __html: localStorage.getItem('auth_token')}} />
+              </span>
+              <button
+                className="absolute right-2 bottom-2 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition duration-200"
                 onClick={() => {
                   navigator.clipboard.writeText(localStorage.getItem('auth_token'));
                   alert('Auth token copied to clipboard!');
@@ -277,6 +306,8 @@ export const ApiHistory = () => {
               </button>
             </div>
           </div>
+
+          
 
           {/* API Usage Section */}
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-shadow duration-300 flex-1 mt-4 md:mt-0">
