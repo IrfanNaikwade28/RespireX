@@ -10,65 +10,23 @@ model = genai.GenerativeModel("gemini-2.0-flash")
 
 def summarize_with_gemini(true_false_data, xray_analysis_result):
     prompt = f"""
-    Prompt:
+    You are a medical expert.
+    You are given with clinical notes, symptoms data in true false format, differential diagnosis data in float value.
+    You need to analyze the all given data and provide a detailed analysis of the data.
+    OUTPUT FORMAT: USE MARKDOWN FORMAT.
+    Do not add anything like ```html or ``` in response.
+    Data like
+    {true_false_data}
+    {xray_analysis_result}
 
-You are an expert medical analyst.
-
-You will receive clinical notes, symptom data in a true/false format, and differential diagnosis data in numerical values. Additionally, you may receive X-ray or imaging analysis results.
-
-Task:
-Analyze all the provided medical data.
-
-Identify correlations between symptoms and possible diagnoses.
-
-Provide an in-depth medical report with structured insights.
-
-Include professional recommendations and any necessary next steps for diagnosis or treatment.
-
-Output Format:
-Use Markdown format to structure the report.
-
-Include titles and subtitles to separate sections.
-
-Maintain clear paragraph spacing for readability.
-
-Ensure a professional medical tone throughout the report.
-
-Break down findings logically, covering symptoms, imaging results, and differential diagnosis.
-
-Data Example (Input):
-Symptom Data: {true_false_data}
-
-X-ray Analysis Results: {xray_analysis_result}
-
-Expected Output Structure:
-Patient Medical Analysis Report
-1. Patient Symptoms Overview
-
-Detailed breakdown of reported symptoms.
-
-2. Imaging/X-ray Findings
-
-Interpretation and observations from medical imaging.
-
-3. Differential Diagnosis Analysis
-
-Probability-based assessment of potential conditions.
-
-4. Conclusion & Recommendations
-
-Professional medical advice and next steps.
-
-Ensure that the response is concise, well-structured, and medically accurate. Avoid unnecessary explanations and focus on clinical relevance.
-
-
-
-
-
-
-
-
-
+    Generate a detailed analysis of the data.
+    Use Proper Markdown Format.I want data in professional medical report format.
+    Use Markdown add Spacing between paragraphs. Use Title and Subtitle to separate sections.
+    Use Space Between Different Paragraph and data you can use html tags.
+    Format the response like a professional medical report.
+    Do not add image path in response.
+    Add Space Between Different Paragraph and data you can use html tags.
+    replace ** by bold in response. use h1 h2 h3 h4 h5 h6 tags for headings.
     """
     response = model.generate_content(prompt)
     print(response.text)
