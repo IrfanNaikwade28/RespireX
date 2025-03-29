@@ -7,8 +7,7 @@ import { Home } from "./components/Home";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Auth } from './components/Auth';
 import { Upgrade } from "./components/upgrade";
-// import { Documentation } from "./components/Documentation";
-
+import { Features } from "./components/Features";
 function App() {
   return (
     <Router>
@@ -16,7 +15,7 @@ function App() {
       <Routes>
         <Route path="/patient" element={<PatientAnalysis />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/xray" element={<XrayAnalysis />} />
+        <Route path="/features" element={<Features />} />
         <Route path="/results" element={<ResultsDashboard />} />
         <Route path="/apihistory" element={<ApiHistory />} />
         <Route path="/upgrade" element={<Upgrade/>} />

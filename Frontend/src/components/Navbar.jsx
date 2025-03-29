@@ -18,7 +18,7 @@ export const Navbar = () => {
         },
         { 
             name: 'Features', 
-            path: '/xray',  // Route to X-ray analysis as main feature
+            path: '/features', 
             icon: <Zap className="w-4 h-4" />
         },
         { 
@@ -44,11 +44,6 @@ export const Navbar = () => {
             name: 'Results Dashboard', 
             path: '/results',
             icon: <FileText className="w-4 h-4" />
-        },
-        { 
-            name: 'Account Settings', 
-            path: '/settings',
-            icon: <Settings className="w-4 h-4" />
         },
         { 
             name: 'API History', 
