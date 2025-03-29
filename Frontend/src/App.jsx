@@ -6,6 +6,8 @@ import { ApiHistory } from "./components/ApiHistory";
 import { Home } from "./components/Home";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Auth } from './components/Auth';
+import { Upgrade } from "./components/upgrade";
+// import { Documentation } from "./components/Documentation";
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         <Route path="/xray" element={<XrayAnalysis />} />
         <Route path="/results" element={<ResultsDashboard />} />
         <Route path="/apihistory" element={<ApiHistory />} />
+        <Route path="/upgrade" element={<Upgrade/>} />
         <Route path="/" element={<Home />} />
       </Routes>
     </Router>
