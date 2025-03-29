@@ -389,7 +389,20 @@ def get_insight(request):
         data = json.loads(request.body)
         true_false_data = data['true_false_data']
         xray_analysis_result = data['xray_analysis_result']
-        text = summarize_with_gemini(true_false_data, xray_analysis_result)
-        print(text)
+        clinical_notes = data['clinical_notes']
+        text = summarize_with_gemini(true_false_data, xray_analysis_result, clinical_notes)
+        # print(text)
         return JsonResponse({'status': True, 'message': 'Insight fetched successfully', 'method': 'POST', 'model': 'level0', 'insight': text})
+    return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def get_doctor_details(request):
+    if request.method == 'GET':
+        auth_token = request.GET.get('auth_token')
+        user = APIUser.objects.filter(auth_token=auth_token).first()
+        if user:
+            return JsonResponse({'status': True, 'message': 'Doctor details fetched successfully', 'method': 'GET', 'model': 'level0', 'doctor_details': user.doctor_details})
+        else:
+            return JsonResponse({'status': False, 'message': 'Invalid auth token'}, status=401)
     return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)

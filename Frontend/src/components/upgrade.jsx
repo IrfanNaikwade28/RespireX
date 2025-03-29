@@ -22,8 +22,8 @@ const PricingCard = ({ plan, price, features, buttonText, popular, onClick, reco
       <div>
         <h3 className="text-2xl font-bold text-blue-950">{plan}</h3>
         <div className="mt-3 flex items-baseline">
-          <span className="text-4xl font-bold text-slate-900">${price}</span>
-          <span className="text-slate-500 text-sm ml-2">/month</span>
+          <span className="text-4xl font-bold text-slate-900">₹{price}</span>
+          <span className="text-slate-500 text-sm ml-2">/only</span>
         </div>
       </div>
 
@@ -60,39 +60,57 @@ export const Upgrade = () => {
   const plans = [
     {
       plan: "Basic",
-      price: billingCycle === 'monthly' ? "0" : "0",
+      price: billingCycle === 'monthly' ? "49" : "49",
       features: [
-        "10 AI-powered scans per month",
+        "Pay Per Scan",
         "Basic result analysis",
-        "Email support within 24 hours",
+        "No API Service",
         "Access to basic features",
-        "Standard API access"
+        "Single Time Access",
+        "Espaically for Single User"
       ],
       buttonText: "Get Started Free",
       popular: false
     },
     {
-      plan: "Pro",
-      price: billingCycle === 'monthly' ? "29" : "290",
+      plan: "Premium",
+      price: billingCycle === 'monthly' ? "2999" : "2999",
       features: [
-        "Unlimited AI-powered scans",
+        "40% off on all scans",
+        "100 Scans per month",
         "Advanced result analysis",
-        "Priority support 24/7",
-        "Access to all premium features",
-        "Advanced API integration"
+        "Email Support",
+        "Consultation with AI & Doctor",
+        "Limited API integration",
+        "Espaically for Mid Level Hospitals, Medical Labs, Research Institutes"
       ],
       buttonText: "Upgrade to Pro",
       popular: true
     },
     {
       plan: "Enterprise",
-      price: billingCycle === 'monthly' ? "99" : "990",
+      price: billingCycle === 'monthly' ? "24999" : "24999",
       features: [
-        "Custom AI model training",
-        "Dedicated support team",
-        "Custom integration options",
-        "Advanced analytics dashboard",
-        "White-label solution"
+        "50% off on all scans",
+        "1000 Scans per month",
+        "Advanced result analysis",
+        "Email Support",
+        "Consultation with AI & Doctor",
+        "Heavy API integration",
+        "Espaically for Hospitals, Medical Labs, Research Institutes"
+      ],
+      buttonText: "Contact Sales",
+      recommended: true
+    },
+    {
+      plan: "API Service",
+      price: billingCycle === 'monthly' ? "49999" : "49000",
+      features: [
+        "Unlimited Scans",
+        "No Application Support",
+        "No Consultation with AI & Doctor",
+        "Heavy API integration",
+        "Espaically for Hospitals, Medical Labs, Research Institutes and Large Scale Industries"
       ],
       buttonText: "Contact Sales",
       recommended: true
@@ -142,9 +160,9 @@ export const Upgrade = () => {
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              Monthly Billing
+              Yearly Billing
             </button>
-            <button
+            {/* <button
               onClick={() => setBillingCycle('annual')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                 billingCycle === 'annual' 
@@ -156,7 +174,7 @@ export const Upgrade = () => {
               <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
                 Save 20%
               </span>
-            </button>
+            </button> */}
           </div>
         </div>
 

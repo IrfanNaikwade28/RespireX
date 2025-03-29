@@ -28,7 +28,7 @@ export const ResultsDashboard = () => {
                             "Emphysema": 0.60,
                             "Fibrosis": 0.61,
                             "Hernia": 0.65,
-                            "Infiltration": 0.61,
+                            "Infiltration": 1.7,
                             "Mass": 0.61,
                             "Nodule": 0.55,
                             "Pleural_Thickening": 0.60,
@@ -40,11 +40,21 @@ export const ResultsDashboard = () => {
                         const numericValue = typeof currentValue === 'string' ? parseFloat(currentValue) : currentValue;
                         const multipliedValue = numericValue * 10; // Multiply the result by 100
                         
+                        let status;
+                        const threshold = 0.20;
+                        if (multipliedValue > standardValue) {
+                            status = "Positive";
+                        } else if (Math.abs(multipliedValue - standardValue) <= threshold) {
+                            status = "Possible";
+                        } else {
+                            status = "Negative";
+                        }
+
                         return {
                             disease,
                             standardValue,
                             currentValue: multipliedValue,
-                            status: multipliedValue > standardValue ? "Positive" : "Negative"
+                            status
                         };
                     });
                     
@@ -261,7 +271,7 @@ export const ResultsDashboard = () => {
                                     AI Analysis
                                 </span>
                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">
-                                    X-ray Analysis
+                                    X-ray
                                 </span>
                             </div>
                         </div>
@@ -319,6 +329,8 @@ export const ResultsDashboard = () => {
                                             <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
                                                 item.status === 'Positive' 
                                                     ? 'bg-red-50 text-red-700' 
+                                                    : item.status === 'Possible'
+                                                    ? 'bg-orange-50 text-orange-700'
                                                     : 'bg-green-50 text-green-700'
                                             }`}>
                                                 {item.status}
