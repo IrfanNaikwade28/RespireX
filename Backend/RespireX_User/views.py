@@ -210,10 +210,11 @@ def level0Analysis(request):
                 symptoms_data.append(1)
             else:
                 symptoms_data.append(0)
-        
-        print(symptoms_data)
+        print(data)
         auth_token = data['auth_token']
+        print(auth_token)
         user = APIUser.objects.filter(auth_token=auth_token).first()
+        print(user)
         if user:
             model = SymptoScan()
             symptoms = symptoms_data
@@ -232,11 +233,11 @@ def level0Analysis(request):
             result = model.predict(symptoms)
             try:
                 current_date_time = datetime.now()
-                historyadd = {f"{current_date_time}": {'status': True, 'message': 'Prediction successful 868686', 'method': 'POST', 'model': 'level0', 'result': result, 'clinical_notes': clinical_notes, 'status_code': 200}}
+                historyadd = {f"{current_date_time}": {'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'clinical_notes': clinical_notes, 'status_code': 200}}
                 user.history.update(historyadd)
                 user.total_hits += 1
                 user.save()
-                return JsonResponse({'status': True, 'message': 'Prediction successful  fgrfhtfyhfyfy', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200, 'clinical_notes': clinical_notes,'true_false_data': true_false_data})
+                return JsonResponse({'status': True, 'message': 'Prediction successful', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 200, 'clinical_notes': clinical_notes,'true_false_data': true_false_data})
             except Exception as e:
                 return JsonResponse({'status': False, 'message': 'Prediction failed', 'method': 'POST', 'model': 'level0', 'result': result, 'status_code': 400})
     

@@ -1,5 +1,6 @@
 import { Star, ArrowRight, Info, Users, Shield, Activity, CheckCircle } from "lucide-react";
 import heroImage from "../assets/images/hero-image.png";
+import { Link } from "react-router-dom";
 
 export const Home = () => {
   return (
@@ -44,10 +45,12 @@ export const Home = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3">
+                <Link to="/patient">
                 <button className="px-6 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm">
                   Try Demo
                   <ArrowRight className="w-4 h-4" />
                 </button>
+                </Link>
                 <button className="px-6 py-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm">
                   Learn More
                   <Info className="w-4 h-4" />

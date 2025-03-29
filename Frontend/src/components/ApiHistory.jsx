@@ -275,13 +275,14 @@ export const ApiHistory = () => {
             <h2 className="text-lg font-semibold text-slate-800">Auth Token</h2>
             <div className="flex relative items-end justify-between mt-2 mb-5 gap-2">
                 <span className="text-slate-600 p-2 rounded-lg bg-slate-100">
-                <span dangerouslySetInnerHTML={{ __html: `curl -X POST -H "Content-Type: application/json" -d '{{"auth_token": "${localStorage.getItem('auth_token')}", "symptoms": [0, 55, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2]}}' http://127.0.0.1:8000/api/0/level0` }} />
+                <span id="curl-command" dangerouslySetInnerHTML={{ __html: `curl -X POST -H "Content-Type: application/json" -d '{{"auth_token": "${localStorage.getItem('auth_token')}", "symptoms": [0, 55, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2]}}' http://127.0.0.1:8000/api/0/level0` }} />
               </span>
               <button
                 className="absolute right-2 bottom-2 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition duration-200"
                 onClick={() => {
-                  navigator.clipboard.writeText(localStorage.getItem('auth_token'));
-                  alert('Auth token copied to clipboard!');
+                  const curlCommand = document.getElementById('curl-command');
+                  navigator.clipboard.writeText(curlCommand.innerHTML);
+                  alert('Curl command copied to clipboard!');
                 }}
               >
                 Copy

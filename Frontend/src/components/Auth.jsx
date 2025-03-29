@@ -240,7 +240,7 @@ export const Auth = () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    localStorage.setItem('token', data.auth_token);
+                    localStorage.setItem('auth_token', data.auth_token);
                     navigate('/');
                 } else {
                     setError(data.message || 'Login failed');
