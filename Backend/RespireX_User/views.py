@@ -292,8 +292,15 @@ def level1Analysis(request):
             print("----------------------------------------------------------------------------")
             # Check if the request was successful
             if response.status_code == 200:
-                # Add the image to the response
+                # print("---------------------------------------------------------------------------- ",response.json())
                 response_data = response.json()
+                results = response_data['result']
+                sorted_results = sorted(results.values(), reverse=True)
+                second_highest = sorted_results[1] if len(sorted_results) > 1 else None
+                third_highest = sorted_results[2] if len(sorted_results) > 2 else None
+                print("Second Highest Value:", second_highest*10, "Third Highest Value:", third_highest*10)
+                
+                # WORKING HERE
                 return JsonResponse(response_data)
             else:
                 # Return error if API request failed
@@ -391,7 +398,6 @@ def get_insight(request):
         xray_analysis_result = data['xray_analysis_result']
         clinical_notes = data['clinical_notes']
         text = summarize_with_gemini(true_false_data, xray_analysis_result, clinical_notes)
-        # print(text)
         return JsonResponse({'status': True, 'message': 'Insight fetched successfully', 'method': 'POST', 'model': 'level0', 'insight': text})
     return JsonResponse({'status': False, 'message': 'Invalid request method'}, status=405)
 
@@ -400,6 +406,8 @@ def get_insight(request):
 def get_doctor_details(request):
     if request.method == 'GET':
         auth_token = request.GET.get('auth_token')
+        keyword = request.GET.get('keyword')
+        print(keyword)
         user = APIUser.objects.filter(auth_token=auth_token).first()
         if user:
             return JsonResponse({'status': True, 'message': 'Doctor details fetched successfully', 'method': 'GET', 'model': 'level0', 'doctor_details': user.doctor_details})

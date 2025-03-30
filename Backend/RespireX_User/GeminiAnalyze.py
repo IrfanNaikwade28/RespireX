@@ -25,7 +25,6 @@ def summarize_with_gemini(true_false_data, xray_analysis_result, clinical_notes)
     Do not add image path in response.
     """
     response = model.generate_content(prompt)
-    print(response.text)
     return response.text
 
 

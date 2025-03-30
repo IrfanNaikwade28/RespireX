@@ -81,8 +81,8 @@ export const Home = () => {
                     </div>
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-bold text-blue-950">99%</span>
-                        <span className="text-blue-600 text-xs">↑2.5%</span>
+                        <span className="text-xl font-bold text-blue-950">94%</span>
+                        <span className="text-blue-600 text-xs">↑1.3%</span>
                       </div>
                       <p className="text-xs text-slate-500">Detection Accuracy</p>
                     </div>
@@ -110,8 +110,8 @@ export const Home = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-1">
-                        <p className="text-sm font-semibold text-blue-950">99%</p>
-                        <span className="text-blue-600 text-xs">↑2.5%</span>
+                        <p className="text-sm font-semibold text-blue-950">94%</p>
+                        <span className="text-blue-600 text-xs">↑1.3%</span>
                       </div>
                       <p className="text-xs text-slate-500">Detection Rate</p>
                     </div>

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'RespireX_User',
     'corsheaders',
+    'Doctor',
 ]
 
 MIDDLEWARE = [
